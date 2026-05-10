@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><title>Series Draft</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&family=Share+Tech+Mono&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#c89b3c;--gold2:#f0d07a;--dark:#0a0c10;--panel:#0f1319;--panel2:#131820;
+  --border:#1e2a38;--border2:#243040;--text:#b0c4d8;--text2:#6a8090;
+  --blue:#4fc3f7;--blue-bg:rgba(79,195,247,.08);--blue-border:rgba(79,195,247,.3);
+  --red:#ef5350;--red-bg:rgba(239,83,80,.08);--red-border:rgba(239,83,80,.3);
+  --fear:#ff5252;--fear-bg:rgba(255,82,82,.07);
+  --win:#4caf50;--win-bg:rgba(76,175,80,.13);--win-border:rgba(76,175,80,.35);
+  --top:#4fc3f7;--jgl:#66bb6a;--mid:#f0d07a;--adc:#ef5350;--sup:#ce93d8;
+}
+html,body{height:100vh;width:100vw;overflow:hidden;background:var(--dark);color:var(--text);font-family:'Barlow',sans-serif;display:flex;flex-direction:column;}
+.hdr{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:8px 20px;border-bottom:1px solid var(--border);background:var(--panel);gap:12px;}
+h1{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--gold);white-space:nowrap}
+.tabs{display:flex;gap:5px;flex-shrink:0}
+.tab{padding:5px 16px;border-radius:4px;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;transition:all .15s;user-select:none;}
+.tab:hover{background:var(--panel2);color:var(--text)}.tab.active{border-color:var(--gold);background:rgba(200,155,60,.1);color:var(--gold)}
+.content{flex:1;min-height:0;overflow-y:auto;padding:12px 20px;display:flex;flex-direction:column;gap:14px;}
+.content::-webkit-scrollbar{width:5px}.content::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.game-section{display:none}.game-section.visible{display:flex;flex-direction:column;gap:12px}
+.game-lbl{font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:5px;text-transform:uppercase;color:var(--gold);text-align:center;padding:6px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:12px;}
+.winner-badge{display:inline-flex;align-items:center;gap:6px;font-family:'Barlow Condensed',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--win);background:var(--win-bg);border:1px solid var(--win-border);border-radius:4px;padding:2px 10px;}
+.draft-sequence{background:var(--panel);border:1px solid var(--border);border-radius:6px;overflow:hidden;display:grid;grid-template-columns:1fr 28px 1fr;}
+.seq-col{display:flex;flex-direction:column;}
+.seq-col-hdr{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);}
+.seq-col-hdr.blue{background:var(--blue-bg);border-left:3px solid var(--blue);}
+.seq-col-hdr.red{background:var(--red-bg);border-right:3px solid var(--red);justify-content:flex-end;flex-direction:row-reverse;}
+.seq-team-name{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;}
+.seq-col-hdr.blue .seq-team-name{color:var(--blue)}.seq-col-hdr.red .seq-team-name{color:var(--red)}
+.seq-team-side{font-family:'Share Tech Mono',monospace;font-size:.55rem;color:var(--text2);}
+.seq-vsbar{display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:.6rem;font-weight:700;letter-spacing:2px;color:var(--text2);background:var(--panel2);border-left:1px solid var(--border);border-right:1px solid var(--border);writing-mode:vertical-rl;}
+.seq-phase-block{padding:10px 14px 8px;border-bottom:1px solid var(--border);}
+.seq-phase-block:last-child{border-bottom:none;}
+.seq-phase-lbl{font-family:'Barlow Condensed',sans-serif;font-size:.58rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);margin-bottom:8px;}
+.seq-cards{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start;}
+.seq-ban{display:flex;flex-direction:column;align-items:center;gap:3px;width:52px;}
+.seq-ban-ico{position:relative;width:44px;height:44px;border-radius:6px;overflow:hidden;background:#111;border:2px solid rgba(239,83,80,.35);}
+.seq-ban-ico img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(50%) brightness(0.65);}
+.seq-ban-ico::after{content:'';position:absolute;inset:0;background:rgba(239,83,80,.15);}
+.seq-ban-x{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:rgba(239,83,80,.75);z-index:1;font-weight:900;}
+.seq-ban-name{font-family:'Barlow Condensed',sans-serif;font-size:.55rem;font-weight:700;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:52px;color:rgba(239,83,80,.8);}
+.seq-pick{display:flex;flex-direction:column;align-items:center;gap:3px;width:58px;}
+.seq-pick-ico{width:50px;height:50px;border-radius:6px;overflow:hidden;background:#111;position:relative;}
+.seq-pick-ico.blue{border:2px solid var(--blue);box-shadow:0 0 10px rgba(79,195,247,.25);}
+.seq-pick-ico.red{border:2px solid var(--red);box-shadow:0 0 10px rgba(239,83,80,.25);}
+.seq-pick-ico img{width:100%;height:100%;object-fit:cover;display:block;}
+.seq-pick-num{position:absolute;bottom:2px;right:3px;font-family:'Share Tech Mono',monospace;font-size:.44rem;color:rgba(255,255,255,.6);background:rgba(0,0,0,.55);padding:0 3px;border-radius:2px;line-height:1.4;}
+.seq-pick-champ{font-family:'Barlow Condensed',sans-serif;font-size:.6rem;font-weight:700;color:var(--gold2);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:58px;}
+.seq-pick-player{font-family:'Share Tech Mono',monospace;font-size:.48rem;color:var(--text2);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:58px;}
+.draft-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.team-panel{background:var(--panel);border:1px solid var(--border);border-radius:6px;overflow:hidden;display:flex;flex-direction:column;}
+.team-panel.winner{border-color:var(--win-border);box-shadow:0 0 14px rgba(76,175,80,.1);}
+.team-hdr{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--border);}
+.team-hdr.blue{background:var(--blue-bg);border-left:3px solid var(--blue);}
+.team-hdr.red{background:var(--red-bg);border-left:3px solid var(--red);}
+.team-name{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;}
+.team-hdr.blue .team-name{color:var(--blue)}.team-hdr.red .team-name{color:var(--red)}
+.team-side{font-family:'Share Tech Mono',monospace;font-size:.58rem;color:var(--text2);margin-left:auto;}
+.picks-list{display:flex;flex-direction:column;gap:2px;padding:6px 8px;}
+.pick-row{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:5px;background:var(--panel2);border:1px solid var(--border);}
+.champ-ico{width:38px;height:38px;border-radius:50%;overflow:hidden;border:2px solid var(--border2);flex-shrink:0;background:#111;}
+.champ-ico img{width:100%;height:100%;object-fit:cover;display:block}
+.pick-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
+.pick-champ{font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;color:var(--gold2);letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pick-player{font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--text2);}
+.pick-role{font-family:'Barlow Condensed',sans-serif;font-size:.68rem;letter-spacing:2px;text-transform:uppercase;padding:2px 7px;border-radius:3px;font-weight:700;flex-shrink:0;}
+.r-top{background:rgba(79,195,247,.12);color:var(--top);border:1px solid rgba(79,195,247,.25);}
+.r-jungle{background:rgba(102,187,106,.12);color:var(--jgl);border:1px solid rgba(102,187,106,.25);}
+.r-mid{background:rgba(240,208,122,.12);color:var(--mid);border:1px solid rgba(240,208,122,.25);}
+.r-adc{background:rgba(239,83,80,.12);color:var(--adc);border:1px solid rgba(239,83,80,.25);}
+.r-support{background:rgba(206,147,216,.12);color:var(--sup);border:1px solid rgba(206,147,216,.25);}
+.pick-num{font-family:'Share Tech Mono',monospace;font-size:.58rem;color:var(--text2);background:var(--border);border-radius:3px;padding:1px 5px;flex-shrink:0;}
+.pick-num.p2{color:var(--gold);background:rgba(200,155,60,.12);border:1px solid rgba(200,155,60,.2);}
+.fear-panel{background:var(--panel);border:1px solid rgba(255,82,82,.2);border-radius:6px;padding:8px 14px;}
+.fear-title{font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#ff5252;margin-bottom:6px;}
+.fear-chips{display:flex;gap:5px;flex-wrap:wrap;}
+.fear-chip{display:flex;align-items:center;gap:4px;padding:2px 7px 2px 3px;border-radius:4px;background:rgba(255,82,82,.07);border:1px solid rgba(255,82,82,.18);}
+.ban-ico{width:20px;height:20px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#111;}
+.ban-ico img{width:100%;height:100%;object-fit:cover;display:block}
+.fear-chip-name{font-family:'Barlow',sans-serif;font-size:.7rem;font-weight:600;color:rgba(255,82,82,.8);}
+.all-block{display:flex;flex-direction:column;gap:12px;padding-top:12px;border-top:1px solid var(--border);}
+.all-block:first-child{border-top:none;padding-top:0;}
+</style></head><body>
+<div class="hdr"><h1>SERIES DRAFT</h1><div class="tabs" id="tabs"></div></div>
+<div class="content" id="content"></div>
+<script>
+const DATA={"recorded_at": "2026-04-30T23:23:47.898267", "total_games": 2, "games": [{"game_num": 1, "game_id": "c1dc8b65-76f3-4943-bd57-6c81daab9c5d", "game_version": "", "team_names": {"20209": "BRUTE", "54508": "CITA Kaizen"}, "team_sides": {"20209": "blue", "54508": "red"}, "picks": {"20209": [{"championName": "Karma", "championID": 0, "playerName": "Munet", "role": "support", "pickTurn": 1, "globalPickTurn": 7, "pickPhase": 1, "teamID": "20209"}, {"championName": "Renekton", "championID": 0, "playerName": "Interor", "role": "top", "pickTurn": 4, "globalPickTurn": 10, "pickPhase": 1, "teamID": "20209"}, {"championName": "Varus", "championID": 0, "playerName": "Skyp", "role": "", "pickTurn": 5, "globalPickTurn": 11, "pickPhase": 1, "teamID": "20209"}, {"championName": "Kindred", "championID": 0, "playerName": "Dunzi", "role": "", "pickTurn": 8, "globalPickTurn": 18, "pickPhase": 2, "teamID": "20209"}, {"championName": "Ahri", "championID": 0, "playerName": "Downed", "role": "mid", "pickTurn": 9, "globalPickTurn": 19, "pickPhase": 2, "teamID": "20209"}], "54508": [{"championName": "Ezreal", "championID": 0, "playerName": "MinePiwek", "role": "bottom", "pickTurn": 2, "globalPickTurn": 8, "pickPhase": 1, "teamID": "54508"}, {"championName": "Jarvan IV", "championID": 0, "playerName": "behave", "role": "", "pickTurn": 3, "globalPickTurn": 9, "pickPhase": 1, "teamID": "54508"}, {"championName": "Nautilus", "championID": 0, "playerName": "J3rkie", "role": "support", "pickTurn": 6, "globalPickTurn": 12, "pickPhase": 1, "teamID": "54508"}, {"championName": "Sion", "championID": 0, "playerName": "Robocop", "role": "top", "pickTurn": 7, "globalPickTurn": 17, "pickPhase": 2, "teamID": "54508"}, {"championName": "LeBlanc", "championID": 0, "playerName": "minedomoles", "role": "", "pickTurn": 10, "globalPickTurn": 20, "pickPhase": 2, "teamID": "54508"}]}, "bans": {"20209": [{"championName": "Galio", "championID": 0, "pickTurn": 1, "teamID": "20209", "phase": 1}, {"championName": "Bard", "championID": 0, "pickTurn": 3, "teamID": "20209", "phase": 1}, {"championName": "Rumble", "championID": 0, "pickTurn": 5, "teamID": "20209", "phase": 1}, {"championName": "Gnar", "championID": 0, "pickTurn": 14, "teamID": "20209", "phase": 2}, {"championName": "Jayce", "championID": 0, "pickTurn": 16, "teamID": "20209", "phase": 2}], "54508": [{"championName": "Pyke", "championID": 0, "pickTurn": 2, "teamID": "54508", "phase": 1}, {"championName": "Orianna", "championID": 0, "pickTurn": 4, "teamID": "54508", "phase": 1}, {"championName": "Ryze", "championID": 0, "pickTurn": 6, "teamID": "54508", "phase": 1}, {"championName": "Mel", "championID": 0, "pickTurn": 13, "teamID": "54508", "phase": 2}, {"championName": "Xin Zhao", "championID": 0, "pickTurn": 15, "teamID": "54508", "phase": 2}]}, "bans_ordered": [{"championName": "Galio", "championID": 0, "pickTurn": 1, "teamID": "20209", "phase": 1}, {"championName": "Pyke", "championID": 0, "pickTurn": 2, "teamID": "54508", "phase": 1}, {"championName": "Bard", "championID": 0, "pickTurn": 3, "teamID": "20209", "phase": 1}, {"championName": "Orianna", "championID": 0, "pickTurn": 4, "teamID": "54508", "phase": 1}, {"championName": "Rumble", "championID": 0, "pickTurn": 5, "teamID": "20209", "phase": 1}, {"championName": "Ryze", "championID": 0, "pickTurn": 6, "teamID": "54508", "phase": 1}, {"championName": "Mel", "championID": 0, "pickTurn": 13, "teamID": "54508", "phase": 2}, {"championName": "Gnar", "championID": 0, "pickTurn": 14, "teamID": "20209", "phase": 2}, {"championName": "Xin Zhao", "championID": 0, "pickTurn": 15, "teamID": "54508", "phase": 2}, {"championName": "Jayce", "championID": 0, "pickTurn": 16, "teamID": "20209", "phase": 2}], "picks_ordered": [{"championName": "Karma", "championID": 0, "playerName": "Munet", "role": "support", "pickTurn": 1, "globalPickTurn": 7, "pickPhase": 1, "teamID": "20209"}, {"championName": "Ezreal", "championID": 0, "playerName": "MinePiwek", "role": "bottom", "pickTurn": 2, "globalPickTurn": 8, "pickPhase": 1, "teamID": "54508"}, {"championName": "Jarvan IV", "championID": 0, "playerName": "behave", "role": "", "pickTurn": 3, "globalPickTurn": 9, "pickPhase": 1, "teamID": "54508"}, {"championName": "Renekton", "championID": 0, "playerName": "Interor", "role": "top", "pickTurn": 4, "globalPickTurn": 10, "pickPhase": 1, "teamID": "20209"}, {"championName": "Varus", "championID": 0, "playerName": "Skyp", "role": "", "pickTurn": 5, "globalPickTurn": 11, "pickPhase": 1, "teamID": "20209"}, {"championName": "Nautilus", "championID": 0, "playerName": "J3rkie", "role": "support", "pickTurn": 6, "globalPickTurn": 12, "pickPhase": 1, "teamID": "54508"}, {"championName": "Sion", "championID": 0, "playerName": "Robocop", "role": "top", "pickTurn": 7, "globalPickTurn": 17, "pickPhase": 2, "teamID": "54508"}, {"championName": "Kindred", "championID": 0, "playerName": "Dunzi", "role": "", "pickTurn": 8, "globalPickTurn": 18, "pickPhase": 2, "teamID": "20209"}, {"championName": "Ahri", "championID": 0, "playerName": "Downed", "role": "mid", "pickTurn": 9, "globalPickTurn": 19, "pickPhase": 2, "teamID": "20209"}, {"championName": "LeBlanc", "championID": 0, "playerName": "minedomoles", "role": "", "pickTurn": 10, "globalPickTurn": 20, "pickPhase": 2, "teamID": "54508"}], "fearless_locked": [], "winning_team": "54508"}, {"game_num": 2, "game_id": "491cddf8-4091-4a28-9a89-b980fa87c9d2", "game_version": "", "team_names": {"54508": "CITA Kaizen", "20209": "BRUTE"}, "team_sides": {"54508": "blue", "20209": "red"}, "picks": {"54508": [{"championName": "Orianna", "championID": 0, "playerName": "minedomoles", "role": "", "pickTurn": 1, "globalPickTurn": 7, "pickPhase": 1, "teamID": "54508"}, {"championName": "Corki", "championID": 0, "playerName": "MinePiwek", "role": "bottom", "pickTurn": 4, "globalPickTurn": 10, "pickPhase": 1, "teamID": "54508"}, {"championName": "Nami", "championID": 0, "playerName": "J3rkie", "role": "support", "pickTurn": 5, "globalPickTurn": 11, "pickPhase": 1, "teamID": "54508"}, {"championName": "Lee Sin", "championID": 0, "playerName": "behave", "role": "", "pickTurn": 8, "globalPickTurn": 18, "pickPhase": 2, "teamID": "54508"}, {"championName": "Yorick", "championID": 0, "playerName": "Robocop", "role": "top", "pickTurn": 9, "globalPickTurn": 19, "pickPhase": 2, "teamID": "54508"}], "20209": [{"championName": "Yunara", "championID": 0, "playerName": "Skyp", "role": "", "pickTurn": 2, "globalPickTurn": 8, "pickPhase": 1, "teamID": "20209"}, {"championName": "Lulu", "championID": 0, "playerName": "Munet", "role": "support", "pickTurn": 3, "globalPickTurn": 9, "pickPhase": 1, "teamID": "20209"}, {"championName": "Xin Zhao", "championID": 0, "playerName": "Dunzi", "role": "", "pickTurn": 6, "globalPickTurn": 12, "pickPhase": 1, "teamID": "20209"}, {"championName": "Syndra", "championID": 0, "playerName": "Downed", "role": "mid", "pickTurn": 7, "globalPickTurn": 17, "pickPhase": 2, "teamID": "20209"}, {"championName": "Irelia", "championID": 0, "playerName": "Interor", "role": "top", "pickTurn": 10, "globalPickTurn": 20, "pickPhase": 2, "teamID": "20209"}]}, "bans": {"54508": [{"championName": "Pyke", "championID": 0, "pickTurn": 1, "teamID": "54508", "phase": 1}, {"championName": "Ashe", "championID": 0, "pickTurn": 3, "teamID": "54508", "phase": 1}, {"championName": "Caitlyn", "championID": 0, "pickTurn": 5, "teamID": "54508", "phase": 1}, {"championName": "Aurora", "championID": 0, "pickTurn": 14, "teamID": "54508", "phase": 2}, {"championName": "Azir", "championID": 0, "pickTurn": 16, "teamID": "54508", "phase": 2}], "20209": [{"championName": "Rumble", "championID": 0, "pickTurn": 2, "teamID": "20209", "phase": 1}, {"championName": "Bard", "championID": 0, "pickTurn": 4, "teamID": "20209", "phase": 1}, {"championName": "Galio", "championID": 0, "pickTurn": 6, "teamID": "20209", "phase": 1}, {"championName": "Nocturne", "championID": 0, "pickTurn": 13, "teamID": "20209", "phase": 2}, {"championName": "Pantheon", "championID": 0, "pickTurn": 15, "teamID": "20209", "phase": 2}]}, "bans_ordered": [{"championName": "Pyke", "championID": 0, "pickTurn": 1, "teamID": "54508", "phase": 1}, {"championName": "Rumble", "championID": 0, "pickTurn": 2, "teamID": "20209", "phase": 1}, {"championName": "Ashe", "championID": 0, "pickTurn": 3, "teamID": "54508", "phase": 1}, {"championName": "Bard", "championID": 0, "pickTurn": 4, "teamID": "20209", "phase": 1}, {"championName": "Caitlyn", "championID": 0, "pickTurn": 5, "teamID": "54508", "phase": 1}, {"championName": "Galio", "championID": 0, "pickTurn": 6, "teamID": "20209", "phase": 1}, {"championName": "Nocturne", "championID": 0, "pickTurn": 13, "teamID": "20209", "phase": 2}, {"championName": "Aurora", "championID": 0, "pickTurn": 14, "teamID": "54508", "phase": 2}, {"championName": "Pantheon", "championID": 0, "pickTurn": 15, "teamID": "20209", "phase": 2}, {"championName": "Azir", "championID": 0, "pickTurn": 16, "teamID": "54508", "phase": 2}], "picks_ordered": [{"championName": "Orianna", "championID": 0, "playerName": "minedomoles", "role": "", "pickTurn": 1, "globalPickTurn": 7, "pickPhase": 1, "teamID": "54508"}, {"championName": "Yunara", "championID": 0, "playerName": "Skyp", "role": "", "pickTurn": 2, "globalPickTurn": 8, "pickPhase": 1, "teamID": "20209"}, {"championName": "Lulu", "championID": 0, "playerName": "Munet", "role": "support", "pickTurn": 3, "globalPickTurn": 9, "pickPhase": 1, "teamID": "20209"}, {"championName": "Corki", "championID": 0, "playerName": "MinePiwek", "role": "bottom", "pickTurn": 4, "globalPickTurn": 10, "pickPhase": 1, "teamID": "54508"}, {"championName": "Nami", "championID": 0, "playerName": "J3rkie", "role": "support", "pickTurn": 5, "globalPickTurn": 11, "pickPhase": 1, "teamID": "54508"}, {"championName": "Xin Zhao", "championID": 0, "playerName": "Dunzi", "role": "", "pickTurn": 6, "globalPickTurn": 12, "pickPhase": 1, "teamID": "20209"}, {"championName": "Syndra", "championID": 0, "playerName": "Downed", "role": "mid", "pickTurn": 7, "globalPickTurn": 17, "pickPhase": 2, "teamID": "20209"}, {"championName": "Lee Sin", "championID": 0, "playerName": "behave", "role": "", "pickTurn": 8, "globalPickTurn": 18, "pickPhase": 2, "teamID": "54508"}, {"championName": "Yorick", "championID": 0, "playerName": "Robocop", "role": "top", "pickTurn": 9, "globalPickTurn": 19, "pickPhase": 2, "teamID": "54508"}, {"championName": "Irelia", "championID": 0, "playerName": "Interor", "role": "top", "pickTurn": 10, "globalPickTurn": 20, "pickPhase": 2, "teamID": "20209"}], "fearless_locked": ["Karma", "Renekton", "Varus", "Kindred", "Ahri", "Ezreal", "Jarvan IV", "Nautilus", "Sion", "LeBlanc"], "winning_team": "54508"}]};
+(function(){
+  const RL={top:'TOP',jungle:'JGL',mid:'MID',middle:'MID',bottom:'ADC',adc:'ADC',support:'SUP','':'???'};
+  const RC={top:'r-top',jungle:'r-jungle',mid:'r-mid',middle:'r-mid',bottom:'r-adc',adc:'r-adc',support:'r-support','':'r-top'};
+  function champImg(name){ return `<img data-champ="${name||''}" alt="${name||''}">`; }
+  function banIco(name){ return `<div class="ban-ico">${champImg(name)}</div>`; }
+  async function loadChampions(){
+    let DD='', CK={};
+    try{
+      const v=await(await fetch('https://ddragon.leagueoflegends.com/api/versions.json')).json();
+      DD=`https://ddragon.leagueoflegends.com/cdn/${v[0]}/img/champion/`;
+      const d=await(await fetch(`https://ddragon.leagueoflegends.com/cdn/${v[0]}/data/en_US/champion.json`)).json();
+      Object.entries(d.data).forEach(([k,v])=>CK[v.name]=k);
+    }catch(e){}
+    // Precargar todas las imágenes antes de asignarlas
+    const imgs=document.querySelectorAll('img[data-champ]');
+    await Promise.all(Array.from(imgs).map(img=>new Promise(resolve=>{
+      const n=img.dataset.champ; if(!n){resolve();return;}
+      const src=`${DD}${CK[n]||n.replace(/[' .]/g,'')}.png`;
+      const probe=new Image();
+      probe.onload=()=>{img.src=src;resolve();};
+      probe.onerror=()=>{img.style.display='none';resolve();};
+      probe.src=src;
+    })));
+  }
+  function renderSequence(g){
+    const tn=g.team_names||{};const sides=g.team_sides||{};
+    let blueId=Object.keys(sides).find(id=>sides[id]==='blue')||Object.keys(tn)[0];
+    let redId=Object.keys(sides).find(id=>sides[id]==='red')||Object.keys(tn)[1];
+    const blueName=tn[blueId]||'Blue';const redName=tn[redId]||'Red';
+    const blueBans1=(g.bans_ordered||[]).filter(b=>b.phase===1&&b.teamID===blueId);
+    const redBans1=(g.bans_ordered||[]).filter(b=>b.phase===1&&b.teamID===redId);
+    const blueBans2=(g.bans_ordered||[]).filter(b=>b.phase===2&&b.teamID===blueId);
+    const redBans2=(g.bans_ordered||[]).filter(b=>b.phase===2&&b.teamID===redId);
+    const bluePicks1=(g.picks_ordered||[]).filter(p=>p.pickPhase===1&&p.teamID===blueId);
+    const redPicks1=(g.picks_ordered||[]).filter(p=>p.pickPhase===1&&p.teamID===redId);
+    const bluePicks2=(g.picks_ordered||[]).filter(p=>p.pickPhase===2&&p.teamID===blueId);
+    const redPicks2=(g.picks_ordered||[]).filter(p=>p.pickPhase===2&&p.teamID===redId);
+    function banCard(b,side){const col=side==='blue'?'var(--blue)':'var(--red)';return`<div class="seq-ban"><div class="seq-ban-ico" style="border-color:${col}55">${champImg(b.championName)}<div class="seq-ban-x">✕</div></div><div class="seq-ban-name">${b.championName}</div></div>`;}
+    function pickCard(p,side){const shortPlayer=(p.playerName||'').split(' ').pop()||p.playerName||'';return`<div class="seq-pick"><div class="seq-pick-ico ${side}">${champImg(p.championName)}<span class="seq-pick-num">#${p.globalPickTurn}</span></div><div class="seq-pick-champ">${p.championName}</div><div class="seq-pick-player" style="color:${side==='blue'?'var(--blue)':'var(--red)'}">${shortPlayer}</div></div>`;}
+    function renderCol(side,name,bans1,picks1,bans2,picks2){return`<div class="seq-col"><div class="seq-col-hdr ${side}"><span class="seq-team-name">${name}</span><span class="seq-team-side">${side==='blue'?'BLUE SIDE':'RED SIDE'}</span></div><div class="seq-phase-block"><div class="seq-phase-lbl">BANS — FASE 1</div><div class="seq-cards">${bans1.map(b=>banCard(b,side)).join('')}</div></div><div class="seq-phase-block"><div class="seq-phase-lbl">PICKS — FASE 1</div><div class="seq-cards">${picks1.map(p=>pickCard(p,side)).join('')}</div></div><div class="seq-phase-block"><div class="seq-phase-lbl">BANS — FASE 2</div><div class="seq-cards">${bans2.map(b=>banCard(b,side)).join('')}</div></div><div class="seq-phase-block"><div class="seq-phase-lbl">PICKS — FASE 2</div><div class="seq-cards">${picks2.map(p=>pickCard(p,side)).join('')}</div></div></div>`;}
+    return`<div class="draft-sequence">${renderCol('blue',blueName,blueBans1,bluePicks1,blueBans2,bluePicks2)}<div class="seq-vsbar">VS</div>${renderCol('red',redName,redBans1,redPicks1,redBans2,redPicks2)}</div>`;
+  }
+  function renderTeam(players,tid,wt,sides,tn){
+    const side=(sides||{})[tid]==='red'?'red':'blue';
+    const sideLabel=side==='blue'?'BLUE SIDE':'RED SIDE';
+    const tname=(tn||{})[tid]||(side==='blue'?'Blue':'Red');
+    const isWinner=wt&&tid===wt;
+    return`<div class="team-panel${isWinner?' winner':''}"><div class="team-hdr ${side}"><span class="team-name">${tname}</span>${isWinner?'<span>🏆</span>':''}<span class="team-side">${sideLabel}</span></div><div class="picks-list">${(players||[]).map(p=>`<div class="pick-row"><div class="champ-ico">${champImg(p.championName)}</div><div class="pick-info"><span class="pick-champ">${p.championName}</span><span class="pick-player">${p.playerName}</span></div><span class="pick-role ${RC[p.role]||'r-top'}">${RL[p.role]||'???'}</span><span class="pick-num${p.pickPhase===2?' p2':''}">#${p.globalPickTurn||p.pickTurn}</span></div>`).join('')}</div></div>`;
+  }
+  function renderFearless(g){const fl=g.fearless_locked||[];if(!fl.length)return'';return`<div class="fear-panel"><div class="fear-title">🔒 FEARLESS — ya usados en la serie</div><div class="fear-chips">${fl.map(c=>`<div class="fear-chip">${banIco(c)}<span class="fear-chip-name">${c}</span></div>`).join('')}</div></div>`;}
+  function renderGame(g){
+    const wt=g.winning_team||'';const winnerName=wt?(g.team_names||{})[wt]:'';
+    const winBadge=winnerName?`<span class="winner-badge">🏆 ${winnerName} WIN</span>`:'';
+    const sides=g.team_sides||{};const tn=g.team_names||{};const tids=Object.keys(tn);
+    return`<div class="game-lbl"><span>GAME ${g.game_num} · PATCH ${(g.game_version||'?').split('.').slice(0,2).join('.')}</span>${winBadge}</div>${renderFearless(g)}${renderSequence(g)}<div class="draft-grid">${tids.map(tid=>renderTeam(g.picks?.[tid],tid,wt,sides,tn)).join('')}</div>`;
+  }
+  const tabs=document.getElementById('tabs'),content=document.getElementById('content');
+  const allTab=document.createElement('div');allTab.className='tab active';allTab.textContent='TODOS';allTab.dataset.s='all';tabs.appendChild(allTab);
+  DATA.games.forEach(g=>{const t=document.createElement('div');t.className='tab';t.textContent=`GAME ${g.game_num}`;t.dataset.s=String(g.game_num);tabs.appendChild(t);});
+  const allSec=document.createElement('div');allSec.className='game-section visible';allSec.dataset.sec='all';
+  DATA.games.forEach(g=>{const b=document.createElement('div');b.className='all-block';b.innerHTML=renderGame(g);allSec.appendChild(b);});
+  content.appendChild(allSec);
+  DATA.games.forEach(g=>{const sec=document.createElement('div');sec.className='game-section';sec.dataset.sec=String(g.game_num);sec.innerHTML=renderGame(g);content.appendChild(sec);});
+  tabs.addEventListener('click',e=>{const t=e.target.closest('.tab');if(!t)return;tabs.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');const s=t.dataset.s;document.querySelectorAll('.game-section').forEach(x=>x.classList.toggle('visible',x.dataset.sec===s));});
+  // Mostrar splash, cargar todo, luego mostrar
+  document.body.style.visibility='hidden';
+  loadChampions().then(()=>{document.body.style.visibility='visible';});
+})();
+</script></body></html>

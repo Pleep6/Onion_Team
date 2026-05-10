@@ -47,9 +47,10 @@ html,body{height:100vh;width:100vw;overflow:hidden;background:var(--dark);color:
 }
 
 /* ── GLOBAL GRID ── */
+
 .global-grid{
   display:grid;
-  grid-template-columns:repeat(4,1fr);
+  grid-template-columns:repeat(5,1fr);  /* era repeat(4,1fr) */
   border-bottom:1px solid var(--border);
 }
 
@@ -67,7 +68,7 @@ html,body{height:100vh;width:100vw;overflow:hidden;background:var(--dark);color:
 .series-date{font-family:'Share Tech Mono',monospace;font-size:.5rem;color:var(--text2);margin-left:auto;}
 .series-grid{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
+  grid-template-columns:repeat(3,1fr);  /* 2 filas de 3 */
 }
 
 /* ── CARDS ── */
@@ -160,6 +161,13 @@ html,body{height:100vh;width:100vw;overflow:hidden;background:var(--dark);color:
     <span class="section-count" id="global-count">global · todas las series</span>
   </div>
   <div class="global-grid">
+    <div class="card acc-green" onclick="generateTeamPDF()">
+  <div class="card-tag">SCOUTING</div>
+  <div class="card-icon">📄</div>
+  <div class="card-title">Team Profile PDF</div>
+  <div class="card-sub">Rival · Pool · Ban targets<br>Player stats · Historia</div>
+  <div class="card-status pending" id="sPDF">listo</div>
+  </div>
 
     <div class="card acc-gold" onclick="open_('team_scoreboard.html','🏆 Team Scoreboard')">
       <div class="card-tag">TEMPORADA</div>
@@ -241,8 +249,11 @@ var SERIES_FILES = [
   'series_jungle_pathing.html',
 ];
 var SERIES_META = [
-  {file:'series_picks_bans.html',     icon:'📋', title:'Picks & Bans',    acc:'acc-gold2', sub:'Draft · Fearless · Picks/Bans'},
-  {file:'series_jungle_pathing.html', icon:'🗺',  title:'Jungle Pathing', acc:'acc-orange',sub:'Rutas · Objetivos · Playback'},
+  {file:'series_picks_bans.html',     icon:'📋', title:'Picks & Bans',    acc:'acc-gold2',  sub:'Draft · Fearless · Picks/Bans'},
+  {file:'series_jungle_pathing.html', icon:'🗺',  title:'Jungle Pathing', acc:'acc-orange', sub:'Rutas · Objetivos · Playback'},
+  {file:'series_support_wards.html',  icon:'👁',  title:'Support Wards',  acc:'acc-purple', sub:'Heatmap · Control · Stealth'},
+  {file:'series_game_stats.html',     icon:'📊',  title:'Game Stats',     acc:'acc-blue',   sub:'Objetivos · Roster · Medias'},
+  {file:'series_damage_stats.html',   icon:'💥',  title:'Damage Stats',   acc:'acc-red',    sub:'DMG share · Visión · Counter-JG'},
 ];
 
 function buildSeriesSection(dir, games) {
@@ -399,6 +410,28 @@ function buildSeriesSection(dir, games) {
 function updateGlobalCount(n) {
   var el = document.getElementById('global-count');
   if (el) el.textContent = 'global · ' + n + ' serie' + (n !== 1 ? 's' : '');
+}
+
+// ── PDF GENERATOR ────────────────────────────────────────────────────────────
+function generateTeamPDF() {
+  var team = prompt('Nombre del equipo rival (o parte del nombre):');
+  if (!team || !team.trim()) return;
+  var el = document.getElementById('sPDF');
+  if (el) { el.textContent = 'generando...'; el.className = 'card-status pending'; }
+  fetch('http://localhost:5000/api/generate_team_profile_pdf?team=' + encodeURIComponent(team.trim()))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (el) {
+        el.textContent = d.ok ? '✓ generado' : '✗ error';
+        el.className = 'card-status ' + (d.ok ? 'ok' : 'missing');
+      }
+      if (d.ok) alert('✅ PDF generado:\n' + d.path);
+      else alert('❌ Error: ' + d.error);
+    })
+    .catch(function(){
+      if (el) { el.textContent = '✗ Flask offline'; el.className = 'card-status missing'; }
+      alert('Flask no disponible (localhost:5000)');
+    });
 }
 
 // ── VIEWER ───────────────────────────────────────────────────────────────────

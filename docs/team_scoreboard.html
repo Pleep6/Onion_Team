@@ -109,6 +109,12 @@ html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:'I
 .ld-stats{display:flex;gap:16px;align-items:center;}
 .ld-val{font-family:'Inter',sans-serif;font-size:18px;font-weight:800;line-height:1;}
 .ld-lbl{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text2);margin-top:2px;}
+.ld-divider{height:1px;background:var(--border);margin:0 -2px;}
+.ld-plate-val{font-family:'Inter',sans-serif;font-size:14px;font-weight:700;color:var(--gold2);line-height:1;}
+.ld-plate-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text2);margin-top:3px;}
+.ld-plate-badge{font-family:'JetBrains Mono',monospace;font-size:7px;font-weight:700;padding:1px 5px;border-radius:3px;letter-spacing:1px;margin-left:4px;vertical-align:middle;}
+.ld-plate-badge.lane{background:rgba(79,195,247,.07);color:var(--text2);border:1px solid var(--border2);}
+.ld-plate-badge.gank{background:rgba(102,187,106,.12);color:var(--jgl);border:1px solid rgba(102,187,106,.3);}
 
 /* ── SOLOQ TRACKER ── */
 .sq-grid{display:flex;flex-direction:column;gap:6px;}
@@ -277,6 +283,12 @@ html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:'I
     <div>
       <div class="sec">RENDIMIENTO POR LADO</div>
       <div class="side-grid" id="side-wrap" style="margin-top:10px;"></div>
+    </div>
+
+    <!-- Lane Diff -->
+    <div>
+      <div class="sec">LANE DIFF <span class="sec-accent">·</span> MEDIAS @15MIN + PLATE GOLD</div>
+      <div class="lanediff-grid" id="lanediff-wrap" style="margin-top:10px;"></div>
     </div>
 
     <!-- Soloq Tracker -->
@@ -451,7 +463,8 @@ function renderObjectives(obj) {
 // ── LANE DIFFS ────────────────────────────────────────────────────────────────
 function renderLaneDiffs(diffs) {
   const wrap = document.getElementById('lanediff-wrap');
-  if (!wrap || !diffs || !Object.keys(diffs).length) {
+  if (!wrap) return;
+  if (!diffs || !Object.keys(diffs).length) {
     wrap.innerHTML = '<div style="color:var(--text2);font-family:\'JetBrains Mono\',monospace;font-size:.6rem;">Sin datos de lane diff</div>';
     return;
   }
@@ -460,10 +473,26 @@ function renderLaneDiffs(diffs) {
     (ROLE_ORD.indexOf(a)===-1?99:ROLE_ORD.indexOf(a)) -
     (ROLE_ORD.indexOf(b)===-1?99:ROLE_ORD.indexOf(b))
   ).forEach(role => {
-    const d   = diffs[role];
-    const col = roleColor(role);
-    const cs  = Number(d.avg_cs_diff   || 0);
-    const g   = Number(d.avg_gold_diff || 0);
+    const d    = diffs[role];
+    const col  = roleColor(role);
+    const cs   = Number(d.avg_cs_diff    || 0);
+    const g    = Number(d.avg_gold_diff  || 0);
+    const pg   = d.avg_plate_gold != null ? Math.round(d.avg_plate_gold) : null;
+    // Badge: jungla siempre "GANKS" (oro de placas = presencia en map), resto "LANE"
+    const isJgl   = role === 'jungle';
+    const badgeCls = isJgl ? 'gank' : 'lane';
+    const badgeTxt = isJgl ? 'GANKS' : 'LANE';
+
+    const plateHtml = pg != null
+      ? '<div class="ld-divider"></div>' +
+        '<div>' +
+          '<div class="ld-plate-val">' + pg + 'g' +
+            '<span class="ld-plate-badge ' + badgeCls + '">' + badgeTxt + '</span>' +
+          '</div>' +
+          '<div class="ld-plate-lbl">plate gold / game</div>' +
+        '</div>'
+      : '';
+
     const card = document.createElement('div');
     card.className = 'ld-card';
     card.innerHTML =
@@ -471,7 +500,8 @@ function renderLaneDiffs(diffs) {
       '<div class="ld-stats">' +
         '<div><div class="ld-val" style="color:' + (cs>=0?'var(--green)':'var(--red)') + '">' + (cs>=0?'+':'') + cs.toFixed(1) + '</div><div class="ld-lbl">CS @15</div></div>' +
         '<div><div class="ld-val" style="color:' + (g>=0?'var(--gold2)':'var(--red)') + '">' + (g>=0?'+':'') + Math.round(g) + 'g</div><div class="ld-lbl">GOLD @15</div></div>' +
-      '</div>';
+      '</div>' +
+      plateHtml;
     wrap.appendChild(card);
   });
 }
@@ -864,6 +894,7 @@ async function init() {
   renderRoster(rosterRef);
   renderObjectives(data.objectives || {});
   renderSides(data.side_obj        || {});
+  renderLaneDiffs(data.lane_diffs  || {});
 
   document.getElementById('loading').style.display = 'none';
   document.getElementById('app').style.display     = 'block';

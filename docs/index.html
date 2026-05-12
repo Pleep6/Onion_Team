@@ -401,14 +401,41 @@ function buildSeriesSection(dir, games) {
 // ── AUTODETECT SERIES ────────────────────────────────────────────────────────
 var _scoutedTeam = '';
 
+function inferScoutedTeam(dirs) {
+  if (!dirs.length) return '';
+  // Cada dir: "TeamA_vs_TeamB_DD-MM-YYYY"
+  // Extraer los dos equipos de cada serie y quedarse con el que aparece en todas
+  var teamSets = dirs.map(function(dir) {
+    var clean = dir.replace(/_\d{2}-\d{2}-\d{4}$/, '');  // quitar fecha
+    var parts  = clean.split('_vs_');
+    if (parts.length < 2) return null;
+    return {
+      a: parts[0].replace(/_/g, ' ').trim(),
+      b: parts.slice(1).join('_vs_').replace(/_/g, ' ').trim()
+    };
+  }).filter(Boolean);
+
+  if (!teamSets.length) return '';
+
+  // Candidatos de la primera serie
+  var candidates = [teamSets[0].a, teamSets[0].b];
+  for (var i = 1; i < teamSets.length; i++) {
+    candidates = candidates.filter(function(c) {
+      return teamSets[i].a === c || teamSets[i].b === c;
+    });
+    if (!candidates.length) break;
+  }
+  return candidates[0] || '';
+}
+
 (function detectSeries(){
   fetch('http://localhost:5000/api/series_list')
     .then(function(r){ return r.json(); })
     .then(function(d){
       var dirs = d.series || [];
-      _scoutedTeam = d.scouted_team || '';
       dirs.forEach(function(dir){ buildSeriesSection(dir, []); });
       updateGlobalCount(dirs.length);
+      _scoutedTeam = inferScoutedTeam(dirs);
       if (_scoutedTeam) document.getElementById('btn-pdf-float').style.display = 'flex';
     })
     .catch(function(){
@@ -416,9 +443,9 @@ var _scoutedTeam = '';
         .then(function(r){ return r.json(); })
         .then(function(d){
           var dirs = d.series || [];
-          _scoutedTeam = d.scouted_team || '';
           dirs.forEach(function(dir){ buildSeriesSection(dir, []); });
           updateGlobalCount(dirs.length);
+          _scoutedTeam = inferScoutedTeam(dirs);
           if (_scoutedTeam) document.getElementById('btn-pdf-float').style.display = 'flex';
         })
         .catch(function(){

@@ -111,7 +111,6 @@ html,body{height:100vh;width:100vw;overflow:hidden;background:var(--dark);color:
   <div class="pv" id="pv-objetivos"></div>
   <div class="pv" id="pv-partidas"></div>
 </div>
-<div class="fab" onclick="generatePdf()"><span id="fab-icon">📄</span><span id="fab-label">SCOUTING PDF</span></div>
 
 <script>
 let SD=null, currentSide='all', DD='';
@@ -416,39 +415,34 @@ document.querySelectorAll('.nav-tab').forEach(t=>{
   });
 });
 
-function generatePdf(){
-  document.getElementById('fab-label').textContent='Generando...';
-  fetch('http://localhost:5000/generate_pdf')
-    .then(r=>r.json()).then(d=>{
-      document.getElementById('fab-icon').textContent=d.ok?'✅':'❌';
-      document.getElementById('fab-label').textContent=d.ok?'PDF listo':(d.error||'Error');
-      setTimeout(()=>{document.getElementById('fab-icon').textContent='📄';document.getElementById('fab-label').textContent='SCOUTING PDF';},4000);
-    }).catch(()=>{
-      document.getElementById('fab-icon').textContent='❌';
-      document.getElementById('fab-label').textContent='Sin conexión';
-      setTimeout(()=>{document.getElementById('fab-icon').textContent='📄';document.getElementById('fab-label').textContent='SCOUTING PDF';},3000);
-    });
-}
-
 (async()=>{
   await loadDD();
   let loaded=false;
 
-  // 1. Flask API
-  try{
-    const r=await fetch('http://localhost:5000/api/jungle_season');
-    if(r.ok){
-      const d=await r.json();
-      if(d.total_games>0&&d.series){SD=d;loaded=true;console.log('Jungle season via API:',d.total_games,'games');}
-      else if(d.error) console.warn('API jungle_season:',d.error);
-      else console.warn('API jungle_season: total_games=0, series=',d.series);
-    }
-  }catch(e){console.warn('Flask no disponible:',e.message);}
+  // 1. Flask API (puerto dinámico — prueba 5000 y 8100)
+  for(const port of [5000]){
+    if(loaded) break;
+    try{
+      const r=await fetch(`http://localhost:${port}/api/jungle_season`);
+      if(r.ok){
+        const d=await r.json();
+        if(d.total_games>0&&d.series){SD=d;loaded=true;console.log(`Jungle season via :${port}`,d.total_games,'games');}
+      }
+    }catch(e){}
+  }
 
-  // 2. Fallback: jungle_season.json en el mismo directorio
+  // 2. Fallback: jungle_season.json relativo (funciona cuando Flask sirve el archivo)
   if(!loaded){
     try{
       const r=await fetch('jungle_season.json');
+      if(r.ok){const d=await r.json();if(d.total_games>0&&d.series){SD=d;loaded=true;}}
+    }catch(e){}
+  }
+
+  // 3. Fallback: ruta absoluta desde output/
+  if(!loaded){
+    try{
+      const r=await fetch('/output/jungle_season.json',{signal:AbortSignal.timeout(2000)});
       if(r.ok){const d=await r.json();if(d.total_games>0&&d.series){SD=d;loaded=true;}}
     }catch(e){}
   }

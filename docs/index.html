@@ -180,7 +180,7 @@ html,body{height:100vh;width:100vw;overflow:hidden;background:var(--dark);color:
 </div>
 
 <!-- BOTÓN FLOTANTE PDF -->
-<button id="btn-pdf-float" onclick="exportPDF()" style="display:none;">
+<button id="btn-pdf-float" onclick="exportPDF()">
   📄 Exportar PDF rival
 </button>
 
@@ -403,11 +403,11 @@ var _scoutedTeam = '';
 
 function inferScoutedTeam(dirs) {
   if (!dirs.length) return '';
-  // Cada dir: "TeamA_vs_TeamB_DD-MM-YYYY"
-  // Extraer los dos equipos de cada serie y quedarse con el que aparece en todas
   var teamSets = dirs.map(function(dir) {
-    var clean = dir.replace(/_\d{2}-\d{2}-\d{4}$/, '');  // quitar fecha
-    var parts  = clean.split('_vs_');
+    // Eliminar fecha en cualquier formato: DD-MM-YYYY o YYYY-MM-DD
+    var clean = dir.replace(/_\d{2}-\d{2}-\d{4}$/, '')
+                   .replace(/_\d{4}-\d{2}-\d{2}$/, '');
+    var parts = clean.split('_vs_');
     if (parts.length < 2) return null;
     return {
       a: parts[0].replace(/_/g, ' ').trim(),
@@ -416,8 +416,6 @@ function inferScoutedTeam(dirs) {
   }).filter(Boolean);
 
   if (!teamSets.length) return '';
-
-  // Candidatos de la primera serie
   var candidates = [teamSets[0].a, teamSets[0].b];
   for (var i = 1; i < teamSets.length; i++) {
     candidates = candidates.filter(function(c) {
@@ -466,7 +464,7 @@ function exportPDF() {
   btn.disabled = true;
   btn.textContent = '⏳ Generando...';
 
-  fetch('http://localhost:8100/export/team_profile_pdf?team=' + encodeURIComponent(_scoutedTeam))
+  fetch('http://localhost:5000/export/team_profile_pdf?team=' + encodeURIComponent(_scoutedTeam))
     .then(function(r) {
       if (!r.ok) return r.json().then(function(d){ throw new Error(d.error || 'Error'); });
       return r.blob();

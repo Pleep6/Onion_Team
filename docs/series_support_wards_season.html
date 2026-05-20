@@ -195,7 +195,8 @@ function w2c(x, z, canvas) {
 function getFilteredGames() {
   return SD.games.filter(g => {
     if (currentGame!=='all' && (g._global_idx!==undefined?g._global_idx:g.game_num)!==currentGame) return false;
-    if (sideFilter!=='both' && (g.side||'blue')!==sideFilter) return false;
+    // Solo aplicar filtro de side en vista "all" — si hay un juego concreto seleccionado, mostrarlo siempre
+    if (currentGame==='all' && sideFilter!=='both' && (g.side||'blue')!==sideFilter) return false;
     return true;
   });
 }
